@@ -20,6 +20,12 @@ import bisect
 import re
 
 
+'''
+find_nearest
+概况：找最近节点
+参数：a，target，test_func，x
+内容：
+'''
 def find_nearest(a, target, test_func=lambda x: True):
     """
     从a中找到target
@@ -30,6 +36,7 @@ def find_nearest(a, target, test_func=lambda x: True):
     :param test_func:
     :return:
     """
+#     首先
     idx = bisect.bisect_left(a, target)
     if (0 <= idx < len(a)) and a[idx] == target:
         return target, 0
@@ -46,6 +53,12 @@ def find_nearest(a, target, test_func=lambda x: True):
             return a[idx], d1
 
 
+'''
+fix_span
+概况：获取跨度
+参数：
+内容：
+'''
 def fix_span(para, offsets, span):
     """
     _, best_indices, _ = fix_span(text_context, offsets, article['answer'])
@@ -85,11 +98,22 @@ def fix_span(para, offsets, span):
     return parastr[best_indices[0]:best_indices[1]], best_indices, best_dist
 
 
+'''
+word_tokenize
+概况：分词
+参数：
+内容：
+'''
 def word_tokenize(sent):
     doc = nlp(sent)
     return [token.text for token in doc]
 
-
+'''
+convert_idx
+概况：转换id的辅助函数
+参数：
+内容：
+'''
 def convert_idx(text, tokens):
     """
     获取每个词干的span
@@ -108,10 +132,22 @@ def convert_idx(text, tokens):
         current += len(token)
     return spans
 
+'''
+prepro_sent
+概况：处理函数
+参数：
+内容：
+'''
 def prepro_sent(sent):
     return sent
     # return sent.replace("''", '" ').replace("``", '" ')
 
+'''
+_process_article
+概况：处理文本
+参数：
+内容：
+'''
 def _process_article(article, config):
     """
     处理文件中的一个问答对
@@ -220,6 +256,12 @@ def _process_article(article, config):
     return example, eval_example
 
 
+'''
+process_file
+概况：处理文件
+参数：filename 文件名，config 配置，word_counter char_counter 都是Counter类型变量 
+内容：
+'''
 def process_file(filename, config, word_counter=None, char_counter=None):
     """
     处理一个json文件
@@ -257,6 +299,12 @@ def process_file(filename, config, word_counter=None, char_counter=None):
     return examples, eval_examples
 
 
+'''
+get_embedding
+概况：嵌入过程
+参数：
+内容：
+'''
 def get_embedding(counter, data_type, limit=-1, emb_file=None, size=None, vec_size=None, token2idx_dict=None):
     """
 
@@ -308,7 +356,12 @@ def get_embedding(counter, data_type, limit=-1, emb_file=None, size=None, vec_si
 
     return emb_mat, token2idx_dict, idx2token_dict
 
-
+'''
+build_features
+概况：构建features
+参数：config 配置信息，examples ，data_type ，out_file，word2idx_dict char2idx_dict 转换字典
+内容：
+'''
 def build_features(config, examples, data_type, out_file, word2idx_dict, char2idx_dict):
     if data_type == 'test':
         para_limit, ques_limit = 0, 0
@@ -378,6 +431,12 @@ def build_features(config, examples, data_type, out_file, word2idx_dict, char2id
     # pickle.dump(datapoints, open(out_file, 'wb'), protocol=-1)
     torch.save(datapoints, out_file)
 
+'''
+save
+概况：存储文件，需要对应文件名
+参数：filename 文件名，obj 对应项目，message 描述信息
+内容：
+'''
 def save(filename, obj, message=None):
     if message is not None:
         print("Saving {}...".format(message))
@@ -385,6 +444,12 @@ def save(filename, obj, message=None):
         json.dump(obj, fh)
 
 
+'''
+prepro
+概况：程序入口
+参数：config 配置信息
+内容：随机生成13个种子，q
+'''
 def prepro(config):
     random.seed(13)
 

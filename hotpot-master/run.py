@@ -3,11 +3,13 @@ import numpy as np
 from tqdm import tqdm
 import os
 from torch import optim, nn
+# 俩自己构建的model。model 可以选择Model NoCharModel NoSelfModel，sp_model 选择SPModel
 from model import Model #, NoCharModel, NoSelfModel
 from sp_model import SPModel
 # from normal_model import NormalModel, NoSelfModel, NoCharModel, NoSentModel
 # from oracle_model import OracleModel, OracleModelV2
 # from util import get_record_parser, convert_tokens, evaluate, get_batch_dataset, get_dataset
+# 从util中引入了convert_tokens、evaluate、get_buckets、DataIterator、IGNORE_INDEX
 from util import convert_tokens, evaluate
 from util import get_buckets, DataIterator, IGNORE_INDEX
 import time
@@ -18,6 +20,12 @@ from torch.autograd import Variable
 import sys
 from torch.nn import functional as F
 
+'''
+create_exp_dir
+概况：
+参数：
+内容：
+'''
 def create_exp_dir(path, scripts_to_save=None):
     if not os.path.exists(path):
         os.mkdir(path)
@@ -30,10 +38,17 @@ def create_exp_dir(path, scripts_to_save=None):
             dst_file = os.path.join(path, 'scripts', os.path.basename(script))
             shutil.copyfile(script, dst_file)
 
+#
 nll_sum = nn.CrossEntropyLoss(size_average=False, ignore_index=IGNORE_INDEX)
 nll_average = nn.CrossEntropyLoss(size_average=True, ignore_index=IGNORE_INDEX)
 nll_all = nn.CrossEntropyLoss(reduce=False, ignore_index=IGNORE_INDEX)
 
+'''
+train
+概况：训练函数
+参数：config 配置信息
+内容：
+'''
 def train(config):
     with open(config.word_emb_file, "r") as fh:
         word_mat = np.array(json.load(fh), dtype=np.float32)
@@ -156,6 +171,12 @@ def train(config):
         if stop_train: break
     logging('best_dev_F1 {}'.format(best_dev_F1))
 
+'''
+evaluate_batch
+概况：每个训练批次评价函数
+参数：data_source 数据源、model 模型文件、max_batches 最大批次、eval_file 验证文件、config 配置参数
+内容：
+'''
 def evaluate_batch(data_source, model, max_batches, eval_file, config):
     answer_dict = {}
     sp_dict = {}
@@ -190,6 +211,12 @@ def evaluate_batch(data_source, model, max_batches, eval_file, config):
 
     return metrics
 
+'''
+predict
+概况：预测函数
+参数：data_source 数据源、model 模型文件、eval_file 验证文件、config 配置参数、prediction_file 预测文件
+内容：
+'''
 def predict(data_source, model, eval_file, config, prediction_file):
     answer_dict = {}
     sp_dict = {}
@@ -222,6 +249,12 @@ def predict(data_source, model, eval_file, config, prediction_file):
     with open(prediction_file, 'w') as f:
         json.dump(prediction, f)
 
+'''
+test
+概况：测试函数
+参数：config 配置信息
+内容：
+'''
 def test(config):
     with open(config.word_emb_file, "r") as fh:
         word_mat = np.array(json.load(fh), dtype=np.float32)
