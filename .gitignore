@@ -1,4 +1,5 @@
 /hotpot-master.zip
 /hotpotQA_DATA.zip
 /hotpotQA_DATA/*.json
+.ipynb_checkpoint
 .idea
