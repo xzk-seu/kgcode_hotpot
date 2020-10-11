@@ -305,12 +305,19 @@ get_embedding
 参数：
 内容：
 '''
+
+
 def get_embedding(counter, data_type, limit=-1, emb_file=None, size=None, vec_size=None, token2idx_dict=None):
     """
-
-    :param counter:
-    :param data_type:
-    :param limit:
+    word_emb_mat, word2idx_dict, idx2word_dict = get_embedding(word_counter, "word", emb_file=config.glove_word_file,
+                    size=config.glove_word_size, vec_size=config.glove_dim, token2idx_dict=word2idx_dict)
+    char_emb_mat, char2idx_dict, idx2char_dict = get_embedding(
+            char_counter, "char", emb_file=None, size=None, vec_size=config.char_dim, token2idx_dict=char2idx_dict)
+    词向量使用glove文件中的词向量
+    字向量使用随机初始化
+    :param counter: 字词计数器
+    :param data_type: "word"/"char"
+    :param limit: 单词出现次数的下限
     :param emb_file:
     :param size:
     :param vec_size:
@@ -342,6 +349,7 @@ def get_embedding(counter, data_type, limit=-1, emb_file=None, size=None, vec_si
 
     NULL = "--NULL--"
     OOV = "--OOV--"
+    # 从2开始enumerate，0和1分别为NULL和OOV
     token2idx_dict = {token: idx for idx, token in enumerate(
         embedding_dict.keys(), 2)} if token2idx_dict is None else token2idx_dict
     token2idx_dict[NULL] = 0
