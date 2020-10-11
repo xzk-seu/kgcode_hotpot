@@ -19,7 +19,17 @@ nlp = spacy.blank("en")
 import bisect
 import re
 
+
 def find_nearest(a, target, test_func=lambda x: True):
+    """
+    从a中找到target
+    fixed_begin, d1 = find_nearest(begins, begin_offset, lambda x: x < end_offset)
+    fixed_end, d2 = find_nearest(ends, end_offset, lambda x: x > begin_offset)
+    :param a:
+    :param target:
+    :param test_func:
+    :return:
+    """
     idx = bisect.bisect_left(a, target)
     if (0 <= idx < len(a)) and a[idx] == target:
         return target, 0
@@ -35,10 +45,21 @@ def find_nearest(a, target, test_func=lambda x: True):
         else:
             return a[idx], d1
 
+
 def fix_span(para, offsets, span):
+    """
+    _, best_indices, _ = fix_span(text_context, offsets, article['answer'])
+
+    :param para: list, 上下文
+    :param offsets:
+    :param span:
+    :return:
+    """
     span = span.strip()
     parastr = "".join(para)
     assert span in parastr, '{}\t{}'.format(span, parastr)
+
+    # x为一个sent_spans，y为[begin, end]，begins为begin的组合，ends为end的组合
     begins, ends = map(list, zip(*[y for x in offsets for y in x]))
 
     best_dist = 1e200
@@ -50,6 +71,7 @@ def fix_span(para, offsets, span):
     for m in re.finditer(re.escape(span), parastr):
         begin_offset, end_offset = m.span()
 
+        # 找出token_begins和token_ends中和begin_offset, end_offset最接近的，若完全匹配上d1==d2==0
         fixed_begin, d1 = find_nearest(begins, begin_offset, lambda x: x < end_offset)
         fixed_end, d2 = find_nearest(ends, end_offset, lambda x: x > begin_offset)
 
@@ -62,12 +84,19 @@ def fix_span(para, offsets, span):
     assert best_indices is not None
     return parastr[best_indices[0]:best_indices[1]], best_indices, best_dist
 
+
 def word_tokenize(sent):
     doc = nlp(sent)
     return [token.text for token in doc]
 
 
 def convert_idx(text, tokens):
+    """
+    获取每个词干的span
+    :param text:
+    :param tokens:
+    :return:
+    """
     current = 0
     spans = []
     for token in tokens:
@@ -84,6 +113,12 @@ def prepro_sent(sent):
     # return sent.replace("''", '" ').replace("``", '" ')
 
 def _process_article(article, config):
+    """
+    处理文件中的一个问答对
+    :param article:
+    :param config:
+    :return:
+    """
     paragraphs = article['context']
     # some articles in the fullwiki dev/test sets have zero paragraphs
     if len(paragraphs) == 0:
@@ -96,6 +131,18 @@ def _process_article(article, config):
     sent2title_ids = []
 
     def _process(sent, is_sup_fact, is_title=False):
+        """
+        对每句话进行处理
+        1、词干化word_tokenize，得到sent_tokens
+        2、用'<t> {} </t>'包裹句子
+        3、用['<t>'] + sent_tokens + ['</t>']包裹词干序列
+        4、得到spans，一个span对应一个token在整个context中的起始、结束位置；
+
+        :param sent: 要处理的句子
+        :param is_sup_fact: 是否是支撑事实
+        :param is_title: 是否是标题
+        :return:
+        """
         nonlocal text_context, context_tokens, context_chars, offsets, start_end_facts, flat_offsets
         N_chars = len(text_context)
 
@@ -114,6 +161,10 @@ def _process_article(article, config):
         context_tokens.extend(sent_tokens)
         context_chars.extend(sent_chars)
         start_end_facts.append((N_tokens, N_tokens+my_N_tokens, is_sup_fact))
+        """
+        offsets的一个元素为一个sent_spans
+        flat_offsets合并了多个flat_offsets
+        """
         offsets.append(sent_spans)
         flat_offsets.extend(sent_spans)
 
@@ -124,6 +175,9 @@ def _process_article(article, config):
 
     sp_fact_cnt = 0
     for para in paragraphs:
+        """
+        对每一段context进行处理
+        """
         cur_title, cur_para = para[0], para[1]
         _process(prepro_sent(cur_title), False, is_title=True)
         sent2title_ids.append((cur_title, -1))
@@ -165,7 +219,18 @@ def _process_article(article, config):
             'sent2title_ids': sent2title_ids}
     return example, eval_example
 
+
 def process_file(filename, config, word_counter=None, char_counter=None):
+    """
+    处理一个json文件
+    返回examples, eval_examples
+
+    :param filename:
+    :param config:
+    :param word_counter:
+    :param char_counter:
+    :return:
+    """
     data = json.load(open(filename, 'r'))
 
     examples = []
@@ -191,7 +256,19 @@ def process_file(filename, config, word_counter=None, char_counter=None):
 
     return examples, eval_examples
 
+
 def get_embedding(counter, data_type, limit=-1, emb_file=None, size=None, vec_size=None, token2idx_dict=None):
+    """
+
+    :param counter:
+    :param data_type:
+    :param limit:
+    :param emb_file:
+    :param size:
+    :param vec_size:
+    :param token2idx_dict:
+    :return:
+    """
     print("Generating {} embedding...".format(data_type))
     embedding_dict = {}
     filtered_elements = [k for k, v in counter.items() if v > limit]
@@ -307,9 +384,11 @@ def save(filename, obj, message=None):
     with open(filename, "w") as fh:
         json.dump(obj, fh)
 
+
 def prepro(config):
     random.seed(13)
 
+    # 仅在训练过程中对字词进行统计
     if config.data_split == 'train':
         word_counter, char_counter = Counter(), Counter()
         examples, eval_examples = process_file(config.data_file, config, word_counter, char_counter)
