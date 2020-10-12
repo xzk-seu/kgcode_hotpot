@@ -370,7 +370,19 @@ build_features
 参数：config 配置信息，examples ，data_type ，out_file，word2idx_dict char2idx_dict 转换字典
 内容：
 '''
+
+
 def build_features(config, examples, data_type, out_file, word2idx_dict, char2idx_dict):
+    """
+
+    :param config:
+    :param examples:
+    :param data_type:
+    :param out_file:
+    :param word2idx_dict:
+    :param char2idx_dict:
+    :return:
+    """
     if data_type == 'test':
         para_limit, ques_limit = 0, 0
         for example in tqdm(examples):
