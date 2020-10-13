@@ -135,7 +135,13 @@ class DataIterator(object):
                 'end_mapping': end_mapping[:cur_bsz, :max_c_len, :max_sent_cnt],
                 'all_mapping': all_mapping[:cur_bsz, :max_c_len, :max_sent_cnt]}
 
+
 def get_buckets(record_file):
+    """
+    加载record.pkl文件
+    :param record_file:
+    :return:
+    """
     # datapoints = pickle.load(open(record_file, 'rb'))
     datapoints = torch.load(record_file)
     return [datapoints]

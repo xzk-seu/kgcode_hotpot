@@ -405,6 +405,7 @@ def build_features(config, examples, data_type, out_file, word2idx_dict, char2id
         total_ += 1
 
         if filter_func(example):
+            # 训练集中在此被过滤掉的为89791/90447
             continue
 
         total += 1

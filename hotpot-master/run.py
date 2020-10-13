@@ -78,6 +78,7 @@ def train(config):
         logging('    - {} : {}'.format(k, v))
 
     logging("Building model...")
+    # 加载record.pkl文件
     train_buckets = get_buckets(config.train_record_file)
     dev_buckets = get_buckets(config.dev_record_file)
 
