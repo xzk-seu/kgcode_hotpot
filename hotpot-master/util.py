@@ -21,6 +21,16 @@ def prepro(token):
 
 class DataIterator(object):
     def __init__(self, buckets, bsz, para_limit, ques_limit, char_limit, shuffle, sent_limit):
+        """
+
+        :param buckets: 只有一个元素的列表，元素为从record.pkl文件中加载的参数 [datapoints]
+        :param bsz: batch_size
+        :param para_limit:
+        :param ques_limit:
+        :param char_limit:
+        :param shuffle: 训练阶段需要shuffle，验证阶段不需要
+        :param sent_limit:
+        """
         self.buckets = buckets
         self.bsz = bsz
         if para_limit is not None and ques_limit is not None:
@@ -36,7 +46,7 @@ class DataIterator(object):
         self.char_limit = char_limit
         self.sent_limit = sent_limit
 
-        self.num_buckets = len(self.buckets)
+        self.num_buckets = len(self.buckets)  # 为0
         self.bkt_pool = [i for i in range(self.num_buckets) if len(self.buckets[i]) > 0]
         if shuffle:
             for i in range(self.num_buckets):
@@ -45,6 +55,11 @@ class DataIterator(object):
         self.shuffle = shuffle
 
     def __iter__(self):
+        """
+        data: bucket -> batch -> 以下各变量
+        q_type==0： y1, y2对应答案在问题中的span
+        :return:
+        """
         context_idxs = torch.LongTensor(self.bsz, self.para_limit).cuda()
         ques_idxs = torch.LongTensor(self.bsz, self.ques_limit).cuda()
         context_char_idxs = torch.LongTensor(self.bsz, self.para_limit, self.char_limit).cuda()
@@ -121,6 +136,7 @@ class DataIterator(object):
             if self.bkt_ptrs[bkt_id] >= len(cur_bucket):
                 self.bkt_pool.remove(bkt_id)
 
+            # contiguous() 让截取的数据在内存中连续
             yield {'context_idxs': context_idxs[:cur_bsz, :max_c_len].contiguous(),
                 'ques_idxs': ques_idxs[:cur_bsz, :max_q_len].contiguous(),
                 'context_char_idxs': context_char_idxs[:cur_bsz, :max_c_len].contiguous(),
@@ -138,7 +154,7 @@ class DataIterator(object):
 
 def get_buckets(record_file):
     """
-    加载record.pkl文件
+    加载record.pkl文件，并存为只有一个元素的列表，进行返回
     :param record_file:
     :return:
     """
